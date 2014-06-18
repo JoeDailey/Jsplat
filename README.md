@@ -1,7 +1,7 @@
 Jsplat
 ====
 
-JavaScript Loose and Adjustable Translating
+JavaScript Parsing and Loosely Adjustable Traversing
 ====
 
 Throw JSON at the wall.
