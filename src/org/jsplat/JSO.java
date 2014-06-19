@@ -20,6 +20,13 @@ public class JSO {
 	
 	private boolean can_next = true;
 	
+	
+	private JSO(JSO root, JSO parent){
+		this.root = root;
+		this.parent = parent;
+	}
+	
+	
 	@SuppressWarnings("unchecked")
 	public JSO(String json) throws malformedJSON{
 		root = this;
@@ -31,7 +38,7 @@ public class JSO {
 		data = new HashMap<String, JSO>();
 		Map<String, JSO> thisObject = (Map<String, JSO>)data;
 		
-		for(Integer i = new Integer(0); i < json.length(); i = Integer.valueOf(i.intValue()+1)){
+		for(int i = 0; i < json.length(); i++){
 			switch(json.charAt(i)){
 				case '"':
 					System.out.println(json.charAt(i));//TODO remove;
@@ -43,7 +50,11 @@ public class JSO {
 					System.out.println(tag);//TODO remove;
 					if(json.charAt(i)!=':') throw new malformedJSON(i, ":", json.charAt(i));
 					i++;//past colon
-					thisObject.put(tag, new JSO(root, this, i, json));
+					JSO newJSO = new JSO(root, parent);
+					i = newJSO(newJSO, root, this, json, i);
+					
+					
+					thisObject.put(tag, newJSO);
 	
 				break;
 				case ',':
@@ -56,32 +67,29 @@ public class JSO {
 			}
 		}
 	}
-	private JSO(JSO root, JSO parent, Integer i, String json){
-		this.root = root;
-		this.parent = parent;
-		
+	private int newJSO(JSO newJSO, JSO root, JSO parent, String json, int i){
 		for(;i < json.length(); i++){
 			switch(json.charAt(i)){
 				case '{':
-					type = TYPE_OBJECT;
+					newJSO.type = TYPE_OBJECT;
 				break;
 				case '"':
-					type = TYPE_STRING;
+					newJSO.type = TYPE_STRING;
 					i++;
-//					System.out.println("\n" + i + "  " + json.indexOf('"', i) );
-					data = json.substring(i, json.indexOf('"', i));
-					int l = ((String)data).length();
-					i+=((String)data).length() + 2;//past close quote
-				return;
+					newJSO.data = json.substring(i, json.indexOf('"', i));
+					i+=((String)newJSO.data).length() + 1;//past close quote
+				return i;
 			}
 		}
+		return i;
 //		if(json.charAt(0) == '{'){
 //			type = TYPE_OBJECT;
 //			data = new HashMap<String, JSO>();
 //		}
-//		Map<String, JSO> thisObject = (Map<String, JSO>)data;
+//		Map<String, JSO> newJSOObject = (Map<String, JSO>)data;
 		
 	}
+	
 	
 	
 	
