@@ -18,7 +18,9 @@ public class JSO {
 	public static final int TYPE_UNDEFINED = 7;
 	public static final int TYPE_NULL = 8;
 	
-	private static final Map<Character, Character> enclosers = new HashMap<Character, Character>(){{
+	private static final Map<Character, Character> enclosers = new HashMap<Character, Character>(){
+	private static final long serialVersionUID = 1244391900210794625L;
+	{
 		put('{', '}');
 		put('[', ']');
 		put('\"', '\"');
@@ -29,112 +31,24 @@ public class JSO {
 	private Object data;
 	private int type;
 	
-	
-	private boolean can_next = true;
-	
-	
-	private JSO(JSO root, JSO parent){
-		this.root = root;
-		this.parent = parent;
-	}
-	
-	
-	@SuppressWarnings("unchecked")
+
 	public JSO(String json) throws malformedJSON{
-		this(TYPE_OBJECT, null, json);
+		this(TYPE_OBJECT, null, null, json);
 		this.root = this;
 	}
 	@SuppressWarnings("unchecked")
-	public JSO(int TYPE, JSO root, String json) throws malformedJSON{
+	public JSO(int TYPE, JSO root, JSO parent, String json) throws malformedJSON{
 		this.root = root;
 		this.type = TYPE_OBJECT;
+		this.parent = parent;
+		
 		
 		switch(TYPE){
 			case TYPE_OBJECT:
-				this.data = new HashMap<String, JSO>();
-				
-				Map<String, JSO> me = (Map<String, JSO>)this.data;
-				
-				for(String prop : splitTop(json)){
-					String[] part = prop.split(":", 2);
-					if(part.length!=2) throw new malformedJSON("tag and property separated by a :", prop);
-					if(part[0].charAt(0) == '"') part[0] = part[0].substring(1, part[0].length());
-					if(part[0].charAt(part[0].length()-1) == '"') part[0] = part[0].substring(0, part[0].length()-1);
-
-					switch(part[1].charAt(0)){
-						case '\"':	//is String
-							me.put(part[0], new JSO(TYPE_STRING, root, part[1]));
-						break;
-						case '{':	//is object
-							me.put(part[0], new JSO(TYPE_OBJECT, root, part[1]));
-						break;
-						case '[':	//is array	
-							me.put(part[0], new JSO(TYPE_ARRAY, root, part[1]));
-						break;
-						default:
-							if( part[1].equals("undefined") || part[1].equals("UNDEFINED") )//is undefined
-								me.put(part[0], new JSO(TYPE_UNDEFINED, root, part[1]));
-							else if( part[1].equals("null") || part[1].equals("NULL") )	//is null
-								me.put(part[0], new JSO(TYPE_NULL, root, part[1]));
-							else if( part[1].equals("true") || part[1].equals("TRUE")
-									||
-									part[1].equals("false") || part[1].equals("FALSE") )//is bool
-								me.put(part[0], new JSO(TYPE_BOOLEAN, root, part[1]));
-							else if( part[1].contains("function") )	//is function
-								me.put(part[0], new JSO(TYPE_FUNCTION, root, part[1]));
-							else{
-								try{  
-								    Double.parseDouble(part[1]);
-								    me.put(part[0], new JSO(TYPE_NUMBER, root, part[1]));
-								}catch(Exception e){
-									throw new malformedJSON("type of STRING, NUMBER, NULL, TRUE, FALSE, OBJECT, ARRAY, or UNDEFINED", part[1]);  
-								}
-							}
-						break;
-					}
-				}
+				this.data = newOfObject(root, this, json);
 			break;
 			case TYPE_ARRAY:
-				this.data = new HashMap<String, JSO>();
-				
-				Map<String, JSO> meArr = (Map<String, JSO>)this.data;
-				
-				int propCount = 0;
-				
-				for(String prop : splitTop(json)){
-					switch(prop.charAt(0)){
-						case '\"':	//is String
-							meArr.put(""+propCount, new JSO(TYPE_STRING, root, prop));
-						break;
-						case '{':	//is object
-							meArr.put(""+propCount, new JSO(TYPE_OBJECT, root, prop));
-						break;
-						case '[':	//is array	
-							meArr.put(""+propCount, new JSO(TYPE_ARRAY, root, prop));
-						break;
-						default:
-							if( prop.equals("undefined") || prop.equals("UNDEFINED") )//is undefined
-								meArr.put(""+propCount, new JSO(TYPE_UNDEFINED, root, prop));
-							else if( prop.equals("null") || prop.equals("NULL") )	//is null
-								meArr.put(""+propCount, new JSO(TYPE_NULL, root, prop));
-							else if( prop.equals("true") || prop.equals("TRUE")
-									||
-									prop.equals("false") || prop.equals("FALSE") )//is bool
-								meArr.put(""+propCount, new JSO(TYPE_BOOLEAN, root, prop));
-							else if( prop.contains("function") )	//is function
-								meArr.put(""+propCount, new JSO(TYPE_FUNCTION, root, prop));
-							else{
-								try{  
-								    Double.parseDouble(prop);
-								    meArr.put(""+propCount, new JSO(TYPE_NUMBER, root, prop));
-								}catch(Exception e){
-									throw new malformedJSON("type of STRING, NUMBER, NULL, TRUE, FALSE, OBJECT, ARRAY, or UNDEFINED", prop);  
-								}
-							}
-						break;
-					}
-				propCount++;
-				}
+				this.data = newOfArray(root, this, json);
 			break;
 			case TYPE_STRING:
 				this.data = json.substring(1, json.length()-1);
@@ -148,6 +62,9 @@ public class JSO {
 				else
 					data = false;
 			break;
+			case TYPE_NULL:
+				data = null;
+			break;
 			default:
 				this.data = json;
 			break;
@@ -155,7 +72,7 @@ public class JSO {
 	}
 	
 
-	public static String[] splitTop(String json){
+	private static String[] splitTop(String json){
 		List<String> props = new ArrayList<String>();
 		Stack<Character> scope = new Stack<Character>();
 		json = clean(json);
@@ -201,66 +118,296 @@ public class JSO {
 		while(s.hasNext()){
 			json += s.findInLine("[^\"\\s]+|\"(\\\\.|[^\\\\\"])*\"");
 		}
+		s.close();
 		return json.replace("\t", "").replace("\n", "");
 	}
-	
-	private int newJSO(JSO newJSO, JSO root, JSO parent, String json, int i){
-		for(;i < json.length(); i++){
-			switch(json.charAt(i)){
-				case '{':
-					newJSO.type = TYPE_OBJECT;
-					i++;
-					newJSO.data = new HashMap<String, JSO>();
+	private static HashMap<String, JSO> newOfObject(JSO root, JSO parent, String json) throws malformedJSON {
+		HashMap<String, JSO> meObj = new HashMap<String, JSO>();
+		
+		for(String prop : splitTop(json)){
+			String[] part = prop.split(":", 2);
+			if(part.length!=2) throw new malformedJSON("tag and property separated by a :", prop);
+			if(part[0].charAt(0) == '"') part[0] = part[0].substring(1, part[0].length());
+			if(part[0].charAt(part[0].length()-1) == '"') part[0] = part[0].substring(0, part[0].length()-1);
+
+			switch(part[1].charAt(0)){
+				case '\"':	//is String
+					meObj.put(part[0], new JSO(TYPE_STRING, root, parent, part[1]));
 				break;
-				case '"':
-					newJSO.type = TYPE_STRING;
-					i++;
-					newJSO.data = json.substring(i, json.indexOf('"', i));
-					i+=((String)newJSO.data).length() + 1;//past close quote
-				return i;
+				case '{':	//is object
+					meObj.put(part[0], new JSO(TYPE_OBJECT, root, parent, part[1]));
+				break;
+				case '[':	//is array	
+					meObj.put(part[0], new JSO(TYPE_ARRAY, root, parent, part[1]));
+				break;
+				default:
+					if( part[1].equals("undefined") || part[1].equals("UNDEFINED") )//is undefined
+						meObj.put(part[0], new JSO(TYPE_UNDEFINED, root, parent, part[1]));
+					else if( part[1].equals("null") || part[1].equals("NULL") )	//is null
+						meObj.put(part[0], new JSO(TYPE_NULL, root, parent, null));
+					else if( part[1].equals("true") || part[1].equals("TRUE")
+							||
+							part[1].equals("false") || part[1].equals("FALSE") )//is bool
+						meObj.put(part[0], new JSO(TYPE_BOOLEAN, root, parent, part[1]));
+					else if( part[1].contains("function") )	//is function
+						meObj.put(part[0], new JSO(TYPE_FUNCTION, root, parent, part[1]));
+					else{
+						try{  
+						    Double.parseDouble(part[1]);
+						    meObj.put(part[0], new JSO(TYPE_NUMBER, root, parent, part[1]));
+						}catch(Exception e){
+							throw new malformedJSON("type of STRING, NUMBER, NULL, TRUE, FALSE, OBJECT, ARRAY, or UNDEFINED", part[1]);  
+						}
+					}
+				break;
 			}
 		}
-		return i;
-//		if(json.charAt(0) == '{'){
-//			type = TYPE_OBJECT;
-//			data = new HashMap<String, JSO>();
-//		}
-//		Map<String, JSO> newJSOObject = (Map<String, JSO>)data;
 		
+		return meObj;
+	}
+	private static HashMap<String, JSO> newOfArray(JSO root, JSO parent, String json) throws malformedJSON {
+		HashMap<String, JSO> meArr = new HashMap<String, JSO>();
+		
+		int propCount = 0;
+		
+		for(String prop : splitTop(json)){
+			switch(prop.charAt(0)){
+				case '\"':	//is String
+					meArr.put(""+propCount, new JSO(TYPE_STRING, root, parent, prop));
+				break;
+				case '{':	//is object
+					meArr.put(""+propCount, new JSO(TYPE_OBJECT, root, parent, prop));
+				break;
+				case '[':	//is array	
+					meArr.put(""+propCount, new JSO(TYPE_ARRAY, root, parent, prop));
+				break;
+				default:
+					if( prop.equals("undefined") || prop.equals("UNDEFINED") )//is undefined
+						meArr.put(""+propCount, new JSO(TYPE_UNDEFINED, root, parent, prop));
+					else if( prop.equals("null") || prop.equals("NULL") )	//is null
+						meArr.put(""+propCount, new JSO(TYPE_NULL, root, parent, prop));
+					else if( prop.equals("true") || prop.equals("TRUE")
+							||
+							prop.equals("false") || prop.equals("FALSE") )//is bool
+						meArr.put(""+propCount, new JSO(TYPE_BOOLEAN, root, parent, prop));
+					else if( prop.contains("function") )	//is function
+						meArr.put(""+propCount, new JSO(TYPE_FUNCTION, root, parent, prop));
+					else{
+						try{  
+						    Double.parseDouble(prop);
+						    meArr.put(""+propCount, new JSO(TYPE_NUMBER, root, parent, prop));
+						}catch(Exception e){
+							throw new malformedJSON("type of STRING, NUMBER, NULL, TRUE, FALSE, OBJECT, ARRAY, or UNDEFINED", prop);  
+						}
+					}
+				break;
+			}
+			propCount++;
+		}
+		return meArr;
 	}
 	
+	public Object get() {
+		if(!(this.type == TYPE_ARRAY) || !(this.type == TYPE_BOOLEAN))
+			return this.data;
+		return this;
+	}
+	public Object get(String node) throws NodeNotFound{
+		return traverse(node).get();
+	}
+	public Object get(int node) throws NodeNotFound{
+		return traverse("" + node).get();
+	}
+
+	@SuppressWarnings("unchecked")
+	public boolean set(String node, String Value) throws NodeNotFound{
+		JSO toSet = this.traverse(node);
+		String[] nodeArr = node.split("\\.");
+		String finode = nodeArr[nodeArr.length-1];
+		HashMap<String, JSO> parentData = (HashMap<String, JSO>) toSet.parent().data;
+		
+		if(Value == null){
+			try {
+				parentData.put(finode, new JSO(TYPE_NULL, toSet.root, toSet.parent, null));
+				return true;
+			} catch (malformedJSON e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		if(Value.charAt(0) == '{'){
+			try {
+				parentData.put(finode, new JSO(TYPE_OBJECT, toSet.root, toSet.parent, Value));
+				return true;
+			} catch (malformedJSON e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		if(Value.charAt(0) == '['){
+			try {
+				parentData.put(finode, new JSO(TYPE_ARRAY, toSet.root, toSet.parent, Value));
+				return true;
+			} catch (malformedJSON e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		try {
+			parentData.put(finode, new JSO(TYPE_STRING, toSet.root, toSet.parent, "\""+Value+"\""));
+			return true;
+		} catch (malformedJSON e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	public boolean set(String node, double Value) throws NodeNotFound{
+		JSO toSet = this.traverse(node);
+		String[] nodeArr = node.split("\\.");
+		String finode = nodeArr[nodeArr.length-1];
+		HashMap<String, JSO> parentData = (HashMap<String, JSO>) toSet.parent().data;
+		try {
+			parentData.put(finode, new JSO(TYPE_NUMBER, toSet.root, toSet.parent, ""+Value));
+			return true;
+		} catch (malformedJSON e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	public boolean set(String node, int Value) throws NodeNotFound{
+		JSO toSet = this.traverse(node);
+		String[] nodeArr = node.split("\\.");
+		String finode = nodeArr[nodeArr.length-1];
+		HashMap<String, JSO> parentData = (HashMap<String, JSO>) toSet.parent().data;
+		try {
+			parentData.put(finode, new JSO(TYPE_NUMBER, toSet.root, toSet.parent, ""+Value));
+			return true;
+		} catch (malformedJSON e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	public boolean set(String node, boolean Value) throws NodeNotFound{
+		JSO toSet = this.traverse(node);
+		String[] nodeArr = node.split("\\.");
+		String finode = nodeArr[nodeArr.length-1];
+		HashMap<String, JSO> parentData = (HashMap<String, JSO>) toSet.parent().data;
+		try {
+			parentData.put(finode, new JSO(TYPE_BOOLEAN, toSet.root, toSet.parent, ""+Value));
+			return true;
+		} catch (malformedJSON e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 	
+	public boolean set(String Value){
+		if(Value == null){
+			this.data = null;
+			this.type = TYPE_NULL;
+			return true;
+		}
+		if(Value.charAt(0) == '{'){
+			try {
+				this.data = newOfObject(this.root,this.parent, Value);
+				this.type = TYPE_OBJECT;
+				return true;
+			} catch (malformedJSON e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		if(Value.charAt(0) == '['){
+			try {
+				this.data = newOfArray(this.root,this.parent, Value);
+				this.type = TYPE_ARRAY;
+				return true;
+			} catch (malformedJSON e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		this.data = Value;
+		this.type = TYPE_STRING;
+		return true;
+
+	}
+	public boolean set(double Value){
+		this.data = Value;
+		this.type = TYPE_NUMBER;
+
+		return true;
+	}
+	public boolean set(int Value){
+		this.data = Value;
+		this.type = TYPE_NUMBER;
+		return true;
+	}
+	public boolean set(boolean Value){
+		this.data = Value;
+		this.type = TYPE_BOOLEAN;
+		return true;
+	}
 	
+	public JSO traverse(String node) throws NodeNotFound{
+		return traverse(this, node);
+	}
+	@SuppressWarnings("unchecked")
+	private JSO traverse(JSO jso, String nodes) throws NodeNotFound {
+		String[] route = nodes.split("\\.");
+
+		JSO rtrn = null;
+		if(route.length == 1){
+			if(!(jso.type == TYPE_ARRAY) && !(jso.type == TYPE_OBJECT))
+				rtrn = jso;
+			else
+				rtrn = ((HashMap<String, JSO>)jso.data).get(route[0]);
+			if(rtrn == null)
+				throw new NodeNotFound(nodes);
+			return rtrn;
+		}
+		String nextNodes = "";
+		for(int i = 1; i<route.length-1; i++){
+			nextNodes+= route[i]+".";
+		}
+		nextNodes+= route[route.length-1];
+		
+		return traverse(((HashMap<String, JSO>)jso.data).get(route[0]), nextNodes);
+	}
 	
+	public JSO parent(){
+		return this.parent;
+	}
 	
-//	public Object get(String node){
-//		int index = 0;
-//		String[] route = node.split("\\.");
-//		if(index route.length )
-//		return null;
-//	}
-//	public  void set(String node, String Value);
-//	public JSO traverse(String node);
-//	public JSO parent();
-//	public JSO[] children();
-//	public JSO root();
+	@SuppressWarnings("unchecked")
+	public JSO[] children(){
+		JSO[] type = null;
+		if(this.type == TYPE_ARRAY || this.type == TYPE_OBJECT)
+			return ((HashMap<String, JSO>)this.data).values().toArray(type);
+		return null;
+	}
+	
+	public JSO root(){
+		return this.root;
+	}
 	
 
 	
 	
 	
-//	public Object g(String node){return get(node);};
-//	public Object g(){return get("");};
-//	public void s(String node, String value){set(node, value);};
-//	public void s(String value){set("", value);};
-//	public JSO j(String node){return traverse(node);}
-//	public JSO p(){return parent();}
-//	public JSO[] c(){return children();}
-//	public JSO r(){return root();}
+	public Object g(String node) throws NodeNotFound{return get(node);};
+	public Object g(int node) throws NodeNotFound{return get(""+node);};
+	public Object g() throws NodeNotFound{return get("");};
+	public boolean s(String node, String value) throws NodeNotFound{return set(node, value);};
+	public boolean s(String value) throws NodeNotFound{return set("", value);};
+	public JSO o(String node) throws NodeNotFound{return traverse(node);}
+	public JSO p(){return parent();}
+	public JSO[] c(){return children();}
+	public JSO r(){return root();}
 }
 
-@SuppressWarnings("serial")
 class malformedJSON extends Exception{
+	private static final long serialVersionUID = -1976415057769292607L;
 	private final String expected;
 	private final String instead;
 	malformedJSON(String expected, String instead){
@@ -276,4 +423,15 @@ class malformedJSON extends Exception{
 		return "Expected " + expected + ", instead found " + instead;
 	}
 	
+}
+class NodeNotFound extends Exception{
+	private static final long serialVersionUID = 7091727938827727023L;
+	private final String node;
+	public NodeNotFound(String node) {
+		this.node = node;
+	}
+	@Override
+	public String getMessage() {
+		return node + " not found";
+	}
 }
