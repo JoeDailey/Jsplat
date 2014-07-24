@@ -33,7 +33,7 @@ JSO myJSO = new JSO(myObj);
 
 Getting values from JSON
 ==
-All of the following lines will set title to the same value.
+All of the following lines will get the same value at title.
 ```java
 String title = myJSO.traverse("glossary").traverse("title").get();
 String title = myJSO.j("glossary").j("title").g();
@@ -45,7 +45,7 @@ String title = myJSO.j("glossary.title").g();
 
 Setting values into JSON
 ==
-These will set `myObj.glossary.title = "asdf"`
+These will set `myObj.glossary.title` = `"asdf"`
 ```java
 myJSO.traverse("glossary").traverse("title").set("asdf");
 myJSO.j("glossary").j("title").s("asdf");
