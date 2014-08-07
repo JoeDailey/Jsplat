@@ -1,3 +1,5 @@
+oops, this isn't up to date. None of the functions are committed. heh
+
 Jsplat
 ====
 
