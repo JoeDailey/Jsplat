@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.Stack;
 
 public class JSO {
@@ -30,15 +32,16 @@ public class JSO {
 	private JSO parent;
 	private Object data;
 	private int type;
+	private String name;
 	
 
 	public JSO(String json) throws malformedJSON{
-		this(TYPE_OBJECT, null, null, json);
-		this.root = this;
+		this("", TYPE_OBJECT, null, null, json);
 	}
-	@SuppressWarnings("unchecked")
-	public JSO(int TYPE, JSO root, JSO parent, String json) throws malformedJSON{
+	public JSO(String name, int TYPE, JSO root, JSO parent, String json) throws malformedJSON{
 		this.root = root;
+		if(root == null);
+			this.root = this;
 		this.type = TYPE_OBJECT;
 		this.parent = parent;
 		
@@ -46,27 +49,34 @@ public class JSO {
 		switch(TYPE){
 			case TYPE_OBJECT:
 				this.data = newOfObject(root, this, json);
+				this.name = name;
 			break;
 			case TYPE_ARRAY:
 				this.data = newOfArray(root, this, json);
+				this.name = name;
 			break;
 			case TYPE_STRING:
 				this.data = json.substring(1, json.length()-1);
+				this.name = name;
 			break;
 			case TYPE_NUMBER:
 				this.data = Double.parseDouble(json.substring(1, json.length()));
+				this.name = name;
 			break;
 			case TYPE_BOOLEAN:
 				if( json.toLowerCase().equals("true") )
 					data = true;
 				else
 					data = false;
+				this.name = name;
 			break;
 			case TYPE_NULL:
 				data = null;
+				this.name = name;
 			break;
 			default:
 				this.data = json;
+				this.name = name;
 			break;
 		}
 	}
@@ -132,29 +142,29 @@ public class JSO {
 
 			switch(part[1].charAt(0)){
 				case '\"':	//is String
-					meObj.put(part[0], new JSO(TYPE_STRING, root, parent, part[1]));
+					meObj.put(part[0], new JSO(part[0], TYPE_STRING, root, parent, part[1]));
 				break;
 				case '{':	//is object
-					meObj.put(part[0], new JSO(TYPE_OBJECT, root, parent, part[1]));
+					meObj.put(part[0], new JSO(part[0], TYPE_OBJECT, root, parent, part[1]));
 				break;
 				case '[':	//is array	
-					meObj.put(part[0], new JSO(TYPE_ARRAY, root, parent, part[1]));
+					meObj.put(part[0], new JSO(part[0], TYPE_ARRAY, root, parent, part[1]));
 				break;
 				default:
 					if( part[1].equals("undefined") || part[1].equals("UNDEFINED") )//is undefined
-						meObj.put(part[0], new JSO(TYPE_UNDEFINED, root, parent, part[1]));
+						meObj.put(part[0], new JSO(part[0], TYPE_UNDEFINED, root, parent, part[1]));
 					else if( part[1].equals("null") || part[1].equals("NULL") )	//is null
-						meObj.put(part[0], new JSO(TYPE_NULL, root, parent, null));
+						meObj.put(part[0], new JSO(part[0], TYPE_NULL, root, parent, null));
 					else if( part[1].equals("true") || part[1].equals("TRUE")
 							||
 							part[1].equals("false") || part[1].equals("FALSE") )//is bool
-						meObj.put(part[0], new JSO(TYPE_BOOLEAN, root, parent, part[1]));
+						meObj.put(part[0], new JSO(part[0], TYPE_BOOLEAN, root, parent, part[1]));
 					else if( part[1].contains("function") )	//is function
-						meObj.put(part[0], new JSO(TYPE_FUNCTION, root, parent, part[1]));
+						meObj.put(part[0], new JSO(part[0], TYPE_FUNCTION, root, parent, part[1]));
 					else{
 						try{  
 						    Double.parseDouble(part[1]);
-						    meObj.put(part[0], new JSO(TYPE_NUMBER, root, parent, part[1]));
+						    meObj.put(part[0], new JSO(part[0], TYPE_NUMBER, root, parent, part[1]));
 						}catch(Exception e){
 							throw new malformedJSON("type of STRING, NUMBER, NULL, TRUE, FALSE, OBJECT, ARRAY, or UNDEFINED", part[1]);  
 						}
@@ -173,29 +183,29 @@ public class JSO {
 		for(String prop : splitTop(json)){
 			switch(prop.charAt(0)){
 				case '\"':	//is String
-					meArr.put(""+propCount, new JSO(TYPE_STRING, root, parent, prop));
+					meArr.put(""+propCount, new JSO(""+propCount, TYPE_STRING, root, parent, prop));
 				break;
 				case '{':	//is object
-					meArr.put(""+propCount, new JSO(TYPE_OBJECT, root, parent, prop));
+					meArr.put(""+propCount, new JSO(""+propCount, TYPE_OBJECT, root, parent, prop));
 				break;
 				case '[':	//is array	
-					meArr.put(""+propCount, new JSO(TYPE_ARRAY, root, parent, prop));
+					meArr.put(""+propCount, new JSO(""+propCount, TYPE_ARRAY, root, parent, prop));
 				break;
 				default:
 					if( prop.equals("undefined") || prop.equals("UNDEFINED") )//is undefined
-						meArr.put(""+propCount, new JSO(TYPE_UNDEFINED, root, parent, prop));
+						meArr.put(""+propCount, new JSO(""+propCount, TYPE_UNDEFINED, root, parent, prop));
 					else if( prop.equals("null") || prop.equals("NULL") )	//is null
-						meArr.put(""+propCount, new JSO(TYPE_NULL, root, parent, prop));
+						meArr.put(""+propCount, new JSO(""+propCount, TYPE_NULL, root, parent, prop));
 					else if( prop.equals("true") || prop.equals("TRUE")
 							||
 							prop.equals("false") || prop.equals("FALSE") )//is bool
-						meArr.put(""+propCount, new JSO(TYPE_BOOLEAN, root, parent, prop));
+						meArr.put(""+propCount, new JSO(""+propCount, TYPE_BOOLEAN, root, parent, prop));
 					else if( prop.contains("function") )	//is function
-						meArr.put(""+propCount, new JSO(TYPE_FUNCTION, root, parent, prop));
+						meArr.put(""+propCount, new JSO(""+propCount, TYPE_FUNCTION, root, parent, prop));
 					else{
 						try{  
 						    Double.parseDouble(prop);
-						    meArr.put(""+propCount, new JSO(TYPE_NUMBER, root, parent, prop));
+						    meArr.put(""+propCount, new JSO(""+propCount, TYPE_NUMBER, root, parent, prop));
 						}catch(Exception e){
 							throw new malformedJSON("type of STRING, NUMBER, NULL, TRUE, FALSE, OBJECT, ARRAY, or UNDEFINED", prop);  
 						}
@@ -228,7 +238,7 @@ public class JSO {
 		
 		if(Value == null){
 			try {
-				parentData.put(finode, new JSO(TYPE_NULL, toSet.root, toSet.parent, null));
+				parentData.put(finode, new JSO(toSet.name, TYPE_NULL, toSet.root, toSet.parent, null));
 				return true;
 			} catch (malformedJSON e) {
 				e.printStackTrace();
@@ -237,7 +247,7 @@ public class JSO {
 		}
 		if(Value.charAt(0) == '{'){
 			try {
-				parentData.put(finode, new JSO(TYPE_OBJECT, toSet.root, toSet.parent, Value));
+				parentData.put(finode, new JSO(toSet.name, TYPE_OBJECT, toSet.root, toSet.parent, Value));
 				return true;
 			} catch (malformedJSON e) {
 				e.printStackTrace();
@@ -246,7 +256,7 @@ public class JSO {
 		}
 		if(Value.charAt(0) == '['){
 			try {
-				parentData.put(finode, new JSO(TYPE_ARRAY, toSet.root, toSet.parent, Value));
+				parentData.put(finode, new JSO(toSet.name, TYPE_ARRAY, toSet.root, toSet.parent, Value));
 				return true;
 			} catch (malformedJSON e) {
 				e.printStackTrace();
@@ -254,46 +264,49 @@ public class JSO {
 			}
 		}
 		try {
-			parentData.put(finode, new JSO(TYPE_STRING, toSet.root, toSet.parent, "\""+Value+"\""));
+			parentData.put(finode, new JSO(toSet.name, TYPE_STRING, toSet.root, toSet.parent, "\""+Value+"\""));
 			return true;
 		} catch (malformedJSON e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public boolean set(String node, double Value) throws NodeNotFound{
 		JSO toSet = this.traverse(node);
 		String[] nodeArr = node.split("\\.");
 		String finode = nodeArr[nodeArr.length-1];
 		HashMap<String, JSO> parentData = (HashMap<String, JSO>) toSet.parent().data;
 		try {
-			parentData.put(finode, new JSO(TYPE_NUMBER, toSet.root, toSet.parent, ""+Value));
+			parentData.put(finode, new JSO(toSet.name, TYPE_NUMBER, toSet.root, toSet.parent, ""+Value));
 			return true;
 		} catch (malformedJSON e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public boolean set(String node, int Value) throws NodeNotFound{
 		JSO toSet = this.traverse(node);
 		String[] nodeArr = node.split("\\.");
 		String finode = nodeArr[nodeArr.length-1];
 		HashMap<String, JSO> parentData = (HashMap<String, JSO>) toSet.parent().data;
 		try {
-			parentData.put(finode, new JSO(TYPE_NUMBER, toSet.root, toSet.parent, ""+Value));
+			parentData.put(finode, new JSO(toSet.name, TYPE_NUMBER, toSet.root, toSet.parent, ""+Value));
 			return true;
 		} catch (malformedJSON e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public boolean set(String node, boolean Value) throws NodeNotFound{
 		JSO toSet = this.traverse(node);
 		String[] nodeArr = node.split("\\.");
 		String finode = nodeArr[nodeArr.length-1];
 		HashMap<String, JSO> parentData = (HashMap<String, JSO>) toSet.parent().data;
 		try {
-			parentData.put(finode, new JSO(TYPE_BOOLEAN, toSet.root, toSet.parent, ""+Value));
+			parentData.put(finode, new JSO(toSet.name, TYPE_BOOLEAN, toSet.root, toSet.parent, ""+Value));
 			return true;
 		} catch (malformedJSON e) {
 			e.printStackTrace();
@@ -381,9 +394,10 @@ public class JSO {
 	
 	@SuppressWarnings("unchecked")
 	public JSO[] children(){
-		JSO[] type = null;
-		if(this.type == TYPE_ARRAY || this.type == TYPE_OBJECT)
-			return ((HashMap<String, JSO>)this.data).values().toArray(type);
+		if(this.type == TYPE_ARRAY || this.type == TYPE_OBJECT){
+			Map<String, JSO> children = (Map<String, JSO>) this.data;
+			return (JSO[]) children.values().toArray(new JSO[children.size()]);
+		}
 		return null;
 	}
 	
@@ -391,7 +405,46 @@ public class JSO {
 		return this.root;
 	}
 	
-
+	@Override
+	public String toString() {
+		
+		return toString(0, this);
+	}
+	private String toString(int levels, JSO object) {
+		String out = tabs(levels);
+		if(object.root != object)
+			out += "\"" + object.name + "\"" + ":";
+		if(object.type == TYPE_ARRAY){
+			out += "[";
+			for(JSO child : object.children()){
+				out += "\n" + tabs(levels+1);
+				out += child.toString(levels+1, child);
+				out += ",";
+			}
+			out = out.substring(0, out.length()-1);
+			out += "\n" + tabs(levels) + "]";
+			return out;
+		}
+		if(object.type == TYPE_OBJECT){
+			out += "{";
+			for(JSO child : object.children()){
+				out += "\n" + tabs(levels+1);
+				out += "\"" + child.name + "\"" + ":";
+				out += child.toString(levels+1, child);
+				out += ",";
+			}
+			out = out.substring(0, out.length()-1);
+			out += "\n" + tabs(levels) + "}";			
+			return out;
+		}
+		return out+object.data.toString();
+	}
+	private String tabs(int levels){
+		String tabs = "";
+		for(int i = 0; i < levels; i++)
+			tabs+="\t";
+		return tabs;
+	}
 	
 	
 	

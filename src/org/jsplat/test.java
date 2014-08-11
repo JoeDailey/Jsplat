@@ -19,7 +19,14 @@ public class test {
 		System.out.println(JSON_OBJECT.o("glossary.title").get());
 		System.out.println(JSON_OBJECT.o("glossary").o("title").get());
 		System.out.println(""+JSON_OBJECT.o("glossary").s("title", "notitle"));
-		System.out.println(JSON_OBJECT.o("glossary").g("title"));
+		System.out.println(JSON_OBJECT.o("glossary"));
+		System.out.println(JSON_OBJECT.o("glossary").toString());
+		
+//		System.out.println(JSON_OBJECT.o("glossary").root());
+//		System.out.println(JSON_OBJECT.o("glossary.title").root());
+//		System.out.println(JSON_OBJECT.o("glossary.title").parent().root() == null);
+//		System.out.println(JSON_OBJECT.o("glossary").children());
+		
 		
 	}
 
