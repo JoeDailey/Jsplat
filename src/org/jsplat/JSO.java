@@ -42,7 +42,7 @@ public class JSO {
 		this.root = root;
 		if(root == null);
 			this.root = this;
-		this.type = TYPE_OBJECT;
+		this.type = TYPE;
 		this.parent = parent;
 		
 		
@@ -411,7 +411,7 @@ public class JSO {
 		return toString(0, this);
 	}
 	private String toString(int levels, JSO object) {
-		String out = tabs(levels);
+		String out = "";
 		if(object.root != object)
 			out += "\"" + object.name + "\"" + ":";
 		if(object.type == TYPE_ARRAY){
@@ -437,7 +437,7 @@ public class JSO {
 			out += "\n" + tabs(levels) + "}";			
 			return out;
 		}
-		return out+object.data.toString();
+		return out+"\""+object.data.toString()+"\"";
 	}
 	private String tabs(int levels){
 		String tabs = "";
