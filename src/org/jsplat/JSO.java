@@ -36,7 +36,7 @@ public class JSO {
 	
 
 	public JSO(String json) throws malformedJSON{
-		this("", TYPE_OBJECT, null, null, json);
+		this("", TYPE_OBJECT, null, null, clean(json));
 	}
 	public JSO(String name, int TYPE, JSO root, JSO parent, String json) throws malformedJSON{
 		this.root = root;
@@ -405,9 +405,30 @@ public class JSO {
 		return this.root;
 	}
 	
+	public JSO find(String nodes) throws NodeNotFound{
+		String[] route = nodes.split("\\.");
+		JSO found = find(this, route[0]);			
+		if(found != null)
+			return found.parent().traverse(nodes);
+		return null;
+			
+	}
+	private JSO find(JSO jso, String node){
+		if(jso.name.equals(node))
+			return jso;
+		if(jso.type == TYPE_ARRAY || jso.type == TYPE_OBJECT){
+			for(JSO child : jso.children()){
+				JSO found = find(child, node);
+				if(found != null)
+					return found;
+			}
+		}
+		return null;
+	}
+
+	
 	@Override
 	public String toString() {
-		
 		return toString(0, this);
 	}
 	private String toString(int levels, JSO object) {
@@ -439,6 +460,11 @@ public class JSO {
 		}
 		return out+"\""+object.data.toString()+"\"";
 	}
+	
+	public String stringify(){
+		return this.toString().replace("\t", "").replace("\n", "");
+	}
+	
 	private String tabs(int levels){
 		String tabs = "";
 		for(int i = 0; i < levels; i++)
@@ -457,6 +483,7 @@ public class JSO {
 	public JSO p(){return parent();}
 	public JSO[] c(){return children();}
 	public JSO r(){return root();}
+	public JSO f(String nodes) throws NodeNotFound{return find(nodes);}
 }
 
 class malformedJSON extends Exception{

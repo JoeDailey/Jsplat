@@ -19,13 +19,15 @@ public class test {
 		System.out.println(JSON_OBJECT.o("glossary.title").get());
 		System.out.println(JSON_OBJECT.o("glossary").o("title").get());
 		System.out.println(""+JSON_OBJECT.o("glossary").s("title", "notitle"));
-		System.out.println(""+JSON_OBJECT.o("glossary").s("GlossDiv", "noList"));
 		System.out.println(JSON_OBJECT.o("glossary"));
+		JSO[] arr = JSON_OBJECT.o("glossary").children();
+		for(JSO c : arr){
+			System.out.println(c);	
+		}
+		System.out.println(JSON_OBJECT.find("GlossDiv").find("GlossDiv"));
+//		System.out.println(""+JSON_OBJECT.o("glossary").s("GlossDiv", "noList"));
 		
-//		System.out.println(JSON_OBJECT.o("glossary").root());
-//		System.out.println(JSON_OBJECT.o("glossary.title").root());
-//		System.out.println(JSON_OBJECT.o("glossary.title").parent().root() == null);
-//		System.out.println(JSON_OBJECT.o("glossary").children());
+		System.out.println(JSON_OBJECT.stringify());
 		
 		 
 	}

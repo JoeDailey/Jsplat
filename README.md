@@ -1,21 +1,19 @@
-oops, this isn't up to date. None of the functions are committed. heh
-
 Jsplat
 ====
 
-JavaScript Parsing and Loosely Adjustable Traversing
+JSON Parsing and Loosely Adjustable Traversing
 ====
 
-Throw JSON at the wall.
+Throw JSON at the wall!
 
-Another Java implementation of a JSON datastructure but this time for JavaScript programmers.
+Another Java implementation of a JSON data structure but this time for JavaScript programmers.
 
-Those familiar with JSON index accessing will recognise this pattern.
+Those familiar with JSON index accessing will recognize this pattern.
 
 Most object methods have shortened named versions.
 
-1 param = traverse to that property and do 
-2 param = traverse to that property and set it as 2nd param
+1 param = traverse to that property and do (selector)
+2 param = set selected value as 2nd param
 
 Here is the sample JSON we will used for examples.
 ```javascript
@@ -86,11 +84,12 @@ The Children
 ```java
 String[] children = myJSO.j("glossary").children();
 String[] children = myJSO.j("glossary").c();
-//children = ["title", "list"]
+//children = [JSO, JSO]
 ```
 
 The type
 ==
+There are more types available. Reference is not completed.
 ```java
 int type = myJSO.type();
 //type == JSO.TYPE_OBJECT
@@ -103,6 +102,21 @@ int type = myJSO.j("glossary.title").type();
 The find
 ==
 ```java
-JSO found = myJSO.find("propertieName");
-JSO found = myJSO.f("propertieName");
+JSO found = myJSO.find("title");
+JSO found = myJSO.find("glossary.title");
+JSO found = myJSO.f("glossary.title");
+```
+
+The stringify
+==
+no spaces, no tabs, no line-breaks
+```java
+JSO found = myJSO.stringify();
+```
+
+The toString
+==
+spaces, tabs, line-breaks for readability
+```java
+JSO found = myJSO.toString();
 ```
