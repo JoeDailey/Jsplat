@@ -1,3 +1,5 @@
+oops, this isn't up to date. None of the functions are committed. heh
+
 Jsplat
 ====
 
@@ -5,8 +7,11 @@ JavaScript Parsing and Loosely Adjustable Traversing
 ====
 
 Throw JSON at the wall.
-Another Java implementation of JSON for JavaScript programmers.
+
+Another Java implementation of a JSON datastructure but this time for JavaScript programmers.
+
 Those familiar with JSON index accessing will recognise this pattern.
+
 Most object methods have shortened named versions.
 
 1 param = traverse to that property and do 
@@ -30,7 +35,7 @@ JSO myJSO = new JSO(myObj);
 
 Getting values from JSON
 ==
-All of the following lines will set title to the same value.
+All of the following lines will get the same value at title.
 ```java
 String title = myJSO.traverse("glossary").traverse("title").get();
 String title = myJSO.j("glossary").j("title").g();
@@ -42,7 +47,7 @@ String title = myJSO.j("glossary.title").g();
 
 Setting values into JSON
 ==
-These will set `myObj.glossary.title = "asdf"`
+These will set `myObj.glossary.title` = `"asdf"`
 ```java
 myJSO.traverse("glossary").traverse("title").set("asdf");
 myJSO.j("glossary").j("title").s("asdf");
@@ -93,4 +98,11 @@ int type = myJSO.j("list").type();
 //type == JSO.TYPE_ARRAY
 int type = myJSO.j("glossary.title").type();
 //type == JSO.TYPE_STRING
+```
+
+The find
+==
+```java
+JSO found = myJSO.find("propertieName");
+JSO found = myJSO.f("propertieName");
 ```
