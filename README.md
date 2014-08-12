@@ -12,9 +12,10 @@ Those familiar with JSON index accessing will recognize this pattern.
 
 Most object methods have shortened named versions.
 
+```xml
 1 param = traverse to that property and do (selector)
 2 param = set selected value as 2nd param
-
+```
 Here is the sample JSON we will used for examples.
 ```javascript
 myObj = {
