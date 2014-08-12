@@ -80,7 +80,7 @@ JSO myParentJSO = myJSO.j("glossary").p();
 //myParentJSO equals myJSO
 ```
 
-The Children
+The children
 ==
 ```java
 String[] children = myJSO.j("glossary").children();
