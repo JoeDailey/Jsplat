@@ -21,8 +21,7 @@ Here is the sample JSON we will used for examples.
 myObj = {
     "glossary": {
         "title": "example glossary",
-	"list":[ 10, 12, 32 ]
-        }
+		"list":[ 10, 12, 32 ]
     }
 }
 ```
@@ -59,8 +58,8 @@ A note on arrays
 ==
 All variations still apply
 ```java
-double myNum = myJSO.j("glossary").g(0);
-double myNum = myJSO.j("glossary").g("0");
+double myNum = myJSO.j("glossary.list").g(0);
+double myNum = myJSO.j("glossary.list").g("0");
 ```
 
 The root
