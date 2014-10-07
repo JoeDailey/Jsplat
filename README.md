@@ -82,8 +82,8 @@ JSO myParentJSO = myJSO.j("glossary").p();
 The children
 ==
 ```java
-String[] children = myJSO.j("glossary").children();
-String[] children = myJSO.j("glossary").c();
+JSO[] children = myJSO.j("glossary").children();
+JSO[] children = myJSO.j("glossary").c();
 //children = [JSO, JSO]
 ```
 
@@ -98,6 +98,15 @@ int type = myJSO.j("list").type();
 int type = myJSO.j("glossary.title").type();
 //type == JSO.TYPE_STRING
 ```
+All Types:
+TYPE_OBJECT;
+TYPE_ARRAY;
+TYPE_NUMBER;
+TYPE_BOOLEAN;
+TYPE_FUNCTION;
+TYPE_STRING;
+TYPE_UNDEFINED;
+TYPE_NULL;
 
 The find
 ==
@@ -111,12 +120,12 @@ The stringify
 ==
 no spaces, no tabs, no line-breaks
 ```java
-JSO found = myJSO.stringify();
+String JSON = myJSO.stringify();
 ```
 
 The toString
 ==
 spaces, tabs, line-breaks for readability
 ```java
-JSO found = myJSO.toString();
+String prettyJSON = myJSO.toString();
 ```
